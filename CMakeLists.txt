@@ -10,7 +10,7 @@ add_executable(NAND2TETRIS main.cpp
 )
 
 add_executable(jack_tokens
-        tests/jack_tokens.cpp
+        "tests/Jack Tokens Test/jack_tokens.cpp"
         Compiler/Tokenizer.cpp
         Compiler/Tokenizer.h
         Compiler/Token.h
