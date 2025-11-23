@@ -1,0 +1,38 @@
+class EverythingTest {
+    field int x, y;
+    field char c;
+    static int count;
+
+    constructor EverythingTest new() {
+        let x = 0;
+        let y = 1;
+        let c = 'a'; // not a real Jack feature, just to see how tokenizer reacts
+        return this;
+    }
+
+    function int max(int a, int b) {
+        if (a > b) {
+            return a;
+        } else {
+            return b;
+        }
+    }
+
+    method boolean test(int n) {
+        var int i;
+        var boolean flag;
+
+        let i = 0;
+        let flag = true;
+        while (i < n) {
+            if ((i * 2) = 0) {
+                let flag = flag & true;
+            } else {
+                let flag = flag | false;
+            }
+            let i = i + 1;
+        }
+
+        return !flag;
+    }
+}

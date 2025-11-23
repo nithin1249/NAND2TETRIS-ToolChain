@@ -1,0 +1,23 @@
+// Basic tokenizer test
+
+class BasicTest {
+    field int x, y;
+    static boolean done;
+
+    constructor BasicTest new(int a, int b) {
+        let x = a;
+        let y = b;
+        let done = false;
+        return this;
+    }
+
+    method void run() {
+        var int i;
+        let i = 0;
+        while (i < 10) {
+            do Output.printInt(i);
+            let i = i + 1;
+        }
+        return;
+    }
+}

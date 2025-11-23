@@ -1,0 +1,33 @@
+/* Multi-line
+ * comment before the class
+ */
+class StringAndArrayTest {
+    function void main() {
+        var Array arr;
+        var int i, n;
+        var String msg;
+
+        let n = 5;
+        let arr = Array.new(n);
+        let msg = "Hello, world!";
+        do Output.printString(msg);
+        do Output.println();
+
+        // Fill array with -i values
+        let i = 0;
+        while (i < n) {
+            let arr[i] = -i;
+            let i = i + 1;
+        }
+
+        // Print array contents
+        let i = 0;
+        while (i < n) {
+            do Output.printInt(arr[i]);
+            do Output.println();
+            let i = i + 1;
+        }
+
+        return;
+    }
+}
