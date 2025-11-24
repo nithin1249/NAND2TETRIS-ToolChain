@@ -8,7 +8,7 @@
 #include <cctype>
 
 namespace nand2tetris::jack {
-	Tokenizer::Tokenizer(const std::string &filePath){
+	Tokenizer::Tokenizer(const std::string &filePath):fileName(filePath){
 		loadFile(filePath);
 		skipWhitespaceAndComments();
 		currentToken=nextToken();
@@ -21,6 +21,20 @@ namespace nand2tetris::jack {
 		}
 		src.assign((std::istreambuf_iterator<char>(in)),std::istreambuf_iterator<char>());
 		pos=0;
+		line=1;
+		column=1;
+	}
+	void Tokenizer::advanceChar() {
+		if (pos >= src.size()) {
+			return;
+		}
+		const char c = src[pos++];
+		if (c == '\n') {
+			++line;
+			column = 1;
+		} else {
+			++column;
+		}
 	}
 
 	bool Tokenizer::hasMoreTokens() const {
@@ -37,7 +51,7 @@ namespace nand2tetris::jack {
 		}
 		skipWhitespaceAndComments();
 		if (pos>=src.size()) {
-			currentToken=std::make_unique<EofToken>();
+			currentToken=std::make_unique<EofToken>(line, column);
 			return;
 		}
 		currentToken=nextToken();
@@ -49,30 +63,35 @@ namespace nand2tetris::jack {
 
 			//white space
 			if (std::isspace(static_cast<unsigned char>(c))) {
-				++pos;
+				advanceChar();
 				continue;
 			}
 
 			//line comment: //
 			if (c=='/'&& pos+1<src.size() && src[pos+1]=='/') {
-				pos+=2;
-				while (pos < src.size() && src[pos] != '\n') ++pos;
+				advanceChar();
+				advanceChar();
+				while (pos < src.size() && src[pos] != '\n') {
+					advanceChar();
+				}
 				continue;
 			}
 
 			//block comment /*...*/
 			if (c=='/' && pos+1<src.size() && src[pos+1]=='*') {
-				pos+=2;
-				while (pos+1<src.size() && !(src[pos]=='*' && src[pos+1]=='/')) ++pos;
+				advanceChar();
+				advanceChar();
+				while (pos+1<src.size() && !(src[pos]=='*' && src[pos+1]=='/')) {
+					advanceChar();
+				}
 
 				if (pos + 1 >= src.size()) {
-					throw std::runtime_error("Unterminated block comment");
+					errorHere("Unterminated block comment");
 				}
-				pos+=2;
+				advanceChar();
+				advanceChar();
 				continue;
 			}
-
-
 
 			break; // non-comment non-whitespace
 		}
@@ -80,52 +99,55 @@ namespace nand2tetris::jack {
 
 	std::unique_ptr<Token> Tokenizer::nextToken() {
 		if (pos>=src.size()) {
-			return std::make_unique<EofToken>();
+			return std::make_unique<EofToken>(line, column);
 		}
+
+		std::size_t tokenLine   = line;
+		std::size_t tokenColumn = column;
 		const char c =src[pos];
 
 		//symbol
 		const std::string symbols="{}()[].,;+-*/&|<>=~";
 		if (symbols.find(c) != std::string::npos) {
-			++pos;
-			return std::make_unique<TextToken>(TokenType::SYMBOL, std::string(1,c));
+			advanceChar();
+			return std::make_unique<TextToken>(TokenType::SYMBOL, std::string(1,c),tokenLine,tokenColumn);
 		}
 
 		//string
 		if (c == '"') {
-			return readString();
+			return readString(tokenLine,tokenColumn);
 		}
 
 		//integer constant
 		if (std::isdigit(static_cast<unsigned char>(c))) {
-			return readNumber();
+			return readNumber(tokenLine,tokenColumn);
 		}
 
 		//identifier or keyword
 		if (std::isalpha(static_cast<unsigned char>(c))||c=='_') {
-			return readIdentifierOrKeyword();
+			return readIdentifierOrKeyword(tokenLine,tokenColumn);
 		}
 
-		throw std::runtime_error("Unexpected character in Jack source");
+		errorHere( "Unexpected character: '" + std::string(1,c)+"'");
 	}
 
-	std::unique_ptr<Token> Tokenizer::readString() {
-		++pos; //skip opening of strings "
+	std::unique_ptr<Token> Tokenizer::readString(const std::size_t tokenline, const std::size_t tokencolumn) {
+		advanceChar(); //skip opening of strings "
 
 		std::string value;
 		while (pos<src.size() && src[pos]!='"') {
 			const char c = src[pos];
 			if (c == '\n' || c == '\r') {
-				throw std::runtime_error("Newline in string constant");
+				errorAt(tokenline, tokencolumn, "Newline in string constant");
 			}
 			value.push_back(c);
-			++pos;
+			advanceChar();
 		}
 		if (pos>=src.size()) {
-			throw std::runtime_error("Unterminated string constant");
+			errorAt(tokenline, tokencolumn, "Unterminated string constant");
 		}
-		++pos;//skip closing of strings "
-		return std::make_unique<TextToken>(TokenType::STRING_CONST,value);
+		advanceChar();//skip closing of strings "
+		return std::make_unique<TextToken>(TokenType::STRING_CONST,value,tokenline, tokencolumn);
 	}
 
 	const Token& Tokenizer::current() const {
@@ -135,18 +157,18 @@ namespace nand2tetris::jack {
 		return *currentToken;
 	}
 
-	std::unique_ptr<Token> Tokenizer::readNumber() {
+	std::unique_ptr<Token> Tokenizer::readNumber(const std::size_t tokenline, const std::size_t tokencolumn) {
 		int value=0;
 
 		while (pos<src.size()&&std::isdigit(static_cast<unsigned char>(src[pos]))) {
 			value=value*10+(src[pos]-'0');
-			++pos;
+			advanceChar();
 		}
 		if (value < 0 || value > 32767) {
-			throw std::runtime_error("Integer constant out of Jack range (0–32767)");
+			errorAt(tokenline,tokencolumn,"Integer constant out of Jack range (0–32767)");
 		}
 
-		return std::make_unique<IntToken>(value);
+		return std::make_unique<IntToken>(value,tokenline,tokencolumn);
 	}
 
 	bool Tokenizer::isKeywordString(const std::string& s, Keyword& outKw) {
@@ -176,21 +198,35 @@ namespace nand2tetris::jack {
 		return false;
 	}
 
-	std::unique_ptr<Token> Tokenizer::readIdentifierOrKeyword() {
+	std::unique_ptr<Token> Tokenizer::readIdentifierOrKeyword(const std::size_t tokenline, const std::size_t tokencolumn) {
 		std::string s;
 		while (pos<src.size()) {
 			const char c=src[pos];
 			if (std::isalnum(static_cast<unsigned char>(c))||c=='_') {
 				s.push_back(c);
-				++pos;
+				advanceChar();
 			} else break;
 		}
 
 		Keyword kw;
 		if (isKeywordString(s,kw)) {
-			return std::make_unique<KeywordToken>(kw);
+			return std::make_unique<KeywordToken>(kw,tokenline,tokencolumn);
 		} else {
-			return std::make_unique<TextToken>(TokenType::IDENTIFIER, s);
+			return std::make_unique<TextToken>(TokenType::IDENTIFIER, s,tokenline,tokencolumn);
 		}
 	}
+
+	[[noreturn]] void Tokenizer::errorAt(const std::size_t errLine, const std::size_t errColumn,const std::string& message) const {
+		const std::string full =
+			fileName + ":" +
+			std::to_string(errLine) + ":" +
+			std::to_string(errColumn) + ": " +
+			message;
+		throw std::runtime_error(full);
+	}
+
+	[[noreturn]]void Tokenizer::errorHere(const std::string& message) const {
+		errorAt(line, column, message);
+	}
+
 }

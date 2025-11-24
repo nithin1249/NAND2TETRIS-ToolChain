@@ -7,6 +7,7 @@
 
 #include<string>
 #include <utility>
+#include <cstddef>
 
 namespace nand2tetris::jack {
 	enum class TokenType {
@@ -25,47 +26,6 @@ namespace nand2tetris::jack {
 		ELSE, WHILE, RETURN, TRUE_, FALSE_, NULL_, THIS_
 
 	};
-
-
-	struct Token {
-		private:
-			TokenType type=TokenType::END_OF_FILE;
-
-		public:
-			explicit Token(const TokenType t):type(t){}
-			TokenType getType() const {return type;}
-			virtual ~Token() = default;
-	};
-
-	struct TextToken final : public Token {
-		private:
-			std::string text;
-
-		public:
-			TextToken(const TokenType t, std::string  text):Token(t),text(std::move(text)){};
-			std::string getText() const {return text;}
-	};
-
-	struct IntToken final : public Token {
-		private:
-			int intVal=0;
-		public:
-			explicit IntToken(const int val):Token(TokenType::INT_CONST), intVal(val){}
-			int getInt() const {return intVal;}
-	};
-
-	struct KeywordToken final : public Token {
-		private:
-			Keyword keyword{};
-		public:
-			explicit KeywordToken(const Keyword keyword):Token(TokenType::KEYWORD), keyword(keyword){}
-			Keyword getKeyword() const {return keyword;}
-	};
-
-	struct EofToken final : public Token {
-		EofToken() : Token(TokenType::END_OF_FILE) {}
-	};
-
 	inline const char* keywordToString(const Keyword kw) {
 		using K = Keyword;
 		switch (kw) {
@@ -94,6 +54,60 @@ namespace nand2tetris::jack {
 		return "<unknown>";
 	}
 
+
+	struct Token {
+		private:
+			TokenType type=TokenType::END_OF_FILE;
+			std::size_t line;
+			std::size_t column;
+
+		public:
+			explicit Token(const TokenType t, const std::size_t line, const std::size_t column):type(t),line(line),column(column){}
+			TokenType getType() const {return type;}
+			std::size_t getLine() const { return line; }
+			std::size_t getColumn() const { return column; }
+
+			// For debugging / error messages
+			virtual std::string toString() const = 0;
+
+			virtual ~Token() = default;
+	};
+
+	struct TextToken final : public Token {
+		private:
+			std::string text;
+
+		public:
+			TextToken(const TokenType t, std::string text,
+				const std::size_t line, const std::size_t column ):Token(t,line,column),text(std::move(text)){};
+			std::string getText() const {return text;}
+			std::string toString() const override {return text;}
+	};
+
+	struct IntToken final : public Token {
+		private:
+			int intVal=0;
+		public:
+			explicit IntToken(const int val,
+				const std::size_t line, const std::size_t column):Token(TokenType::INT_CONST,line, column), intVal(val){}
+			int getInt() const {return intVal;}
+			std::string toString() const override {return std::to_string(intVal);}
+	};
+
+	struct KeywordToken final : public Token {
+		private:
+			Keyword keyword{};
+		public:
+			explicit KeywordToken(const Keyword keyword,
+				const std::size_t line, const std::size_t column):Token(TokenType::KEYWORD,line,column), keyword(keyword){}
+			Keyword getKeyword() const {return keyword;}
+			std::string toString() const override {return keywordToString(keyword);}
+	};
+
+	struct EofToken final : public Token {
+		EofToken(const std::size_t line, const std::size_t column) : Token(TokenType::END_OF_FILE,line,column) {}
+		std::string toString() const override {return {"<EOF>"};}
+	};
 
 }
 
