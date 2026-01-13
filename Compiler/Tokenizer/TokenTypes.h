@@ -6,8 +6,7 @@
 #define NAND2TETRIS_TOKEN_H
 
 #include<string>
-#include <utility>
-#include <cstddef>
+#include<cstddef>
 
 namespace nand2tetris::jack {
 	enum class TokenType {
@@ -54,9 +53,21 @@ namespace nand2tetris::jack {
 		return "<unknown>";
 	}
 
+	inline const char* typeToString(const TokenType t) {
+		switch(t) {
+			case TokenType::KEYWORD:      return "KEYWORD";
+			case TokenType::SYMBOL:       return "SYMBOL";
+			case TokenType::IDENTIFIER:   return "IDENTIFIER";
+			case TokenType::INT_CONST:    return "INT_CONST";
+			case TokenType::STRING_CONST: return "STRING_CONST";
+			case TokenType::END_OF_FILE:  return "EOF";
+		}
+		return "UNKNOWN";
+	}
+
 
 	struct Token {
-		private:
+		protected:
 			TokenType type=TokenType::END_OF_FILE;
 			std::size_t line;
 			std::size_t column;
@@ -70,18 +81,23 @@ namespace nand2tetris::jack {
 			// For debugging / error messages
 			virtual std::string toString() const = 0;
 
+			virtual std::string_view getValue() const { return ""; }
+
 			virtual ~Token() = default;
 	};
 
 	struct TextToken final : public Token {
 		private:
-			std::string text;
+			std::string_view text;
 
 		public:
-			TextToken(const TokenType t, std::string text,
-				const std::size_t line, const std::size_t column ):Token(t,line,column),text(std::move(text)){};
-			std::string getText() const {return text;}
-			std::string toString() const override {return text;}
+			TextToken(const TokenType t, const std::string_view text, const std::size_t line, const std::size_t
+				column ):Token(t,line,column),text(text){};
+			std::string_view getText() const {return text;}
+			std::string toString() const override {return "[" + std::to_string(line) + ":" + std::to_string(column) +
+				"] " + typeToString(type) + " '" + std::string(text) + "'";}
+			~TextToken()override= default;
+			std::string_view getValue() const override {return text;}
 	};
 
 	struct IntToken final : public Token {
@@ -91,7 +107,9 @@ namespace nand2tetris::jack {
 			explicit IntToken(const int val,
 				const std::size_t line, const std::size_t column):Token(TokenType::INT_CONST,line, column), intVal(val){}
 			int getInt() const {return intVal;}
-			std::string toString() const override {return std::to_string(intVal);}
+			std::string toString() const override {return "[" + std::to_string(line) + ":" + std::to_string(column) + "] " +
+				typeToString(type) + " '" + std::to_string(intVal) + "'";}
+			~IntToken()override= default;
 	};
 
 	struct KeywordToken final : public Token {
@@ -101,14 +119,18 @@ namespace nand2tetris::jack {
 			explicit KeywordToken(const Keyword keyword,
 				const std::size_t line, const std::size_t column):Token(TokenType::KEYWORD,line,column), keyword(keyword){}
 			Keyword getKeyword() const {return keyword;}
-			std::string toString() const override {return keywordToString(keyword);}
+			std::string toString() const override {return "[" + std::to_string(line) + ":" + std::to_string(column) + "] " +
+				typeToString(type) + " '" + keywordToString(keyword) + "'";}
+			~KeywordToken()override= default;
+			std::string_view getValue() const override {return keywordToString(this->keyword);}
 	};
 
 	struct EofToken final : public Token {
 		EofToken(const std::size_t line, const std::size_t column) : Token(TokenType::END_OF_FILE,line,column) {}
-		std::string toString() const override {return {"<EOF>"};}
+		std::string toString() const override {return "[" + std::to_string(line) + ":" + std::to_string(column) + "] " +
+			typeToString(type) + " '<EOF>'";}
+		~EofToken()override= default;
 	};
-
 }
 
 #endif

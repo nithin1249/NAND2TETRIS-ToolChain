@@ -5,16 +5,32 @@
 #include "Tokenizer.h"
 #include <fstream>
 #include <stdexcept>
-#include <cctype>
+#include <unordered_map>
 
 namespace nand2tetris::jack {
 	Tokenizer::Tokenizer(const std::string &filePath):fileName(filePath){
 		loadFile(filePath);
+		currentToken=fetchNext();
+	}
+
+	std::unique_ptr<Token> Tokenizer::fetchNext() {
 		skipWhitespaceAndComments();
-		currentToken=nextToken();
+		return nextToken();
+	}
+
+	const Token& Tokenizer::peek() {
+		if (!peekToken) {
+			peekToken = fetchNext(); //
+		}
+
+		return *peekToken;
 	}
 
 	void Tokenizer::loadFile(const std::string &filePath) {
+		// Check for .jack extension
+		if (filePath.length() < 5 || filePath.substr(filePath.length() - 5) != ".jack") {
+			throw std::runtime_error("Invalid file extension. Expected a .jack file: " + filePath);
+		}
 		std::ifstream in(filePath);
 		if (!in) {
 			throw std::runtime_error("Cannot open Jack file: "+filePath);
@@ -32,7 +48,9 @@ namespace nand2tetris::jack {
 		if (c == '\n') {
 			++line;
 			column = 1;
-		} else {
+		} else if (c=='\r') {
+			//do nothing
+		}else {
 			++column;
 		}
 	}
@@ -46,15 +64,15 @@ namespace nand2tetris::jack {
 	}
 
 	void Tokenizer::advance() {
+		if (peekToken) {
+			currentToken = std::move(peekToken); //
+		}
+
 		if (!hasMoreTokens()) {
 			return;
 		}
-		skipWhitespaceAndComments();
-		if (pos>=src.size()) {
-			currentToken=std::make_unique<EofToken>(line, column);
-			return;
-		}
-		currentToken=nextToken();
+		currentToken = fetchNext(); //
+
 	}
 
 	void Tokenizer::skipWhitespaceAndComments() {
@@ -102,15 +120,16 @@ namespace nand2tetris::jack {
 			return std::make_unique<EofToken>(line, column);
 		}
 
-		std::size_t tokenLine   = line;
+		std::size_t tokenLine= line;
 		std::size_t tokenColumn = column;
 		const char c =src[pos];
 
 		//symbol
-		const std::string symbols="{}()[].,;+-*/&|<>=~";
-		if (symbols.find(c) != std::string::npos) {
+		constexpr std::string symbols="{}()[].,;+-*/&|<>=~";
+		if (symbols.find(c) != std::string_view::npos) {
+			std::string_view symView=std::string_view(src).substr(pos,1);
 			advanceChar();
-			return std::make_unique<TextToken>(TokenType::SYMBOL, std::string(1,c),tokenLine,tokenColumn);
+			return std::make_unique<TextToken>(TokenType::SYMBOL,symView,tokenLine,tokenColumn);
 		}
 
 		//string
@@ -134,20 +153,19 @@ namespace nand2tetris::jack {
 	std::unique_ptr<Token> Tokenizer::readString(const std::size_t tokenline, const std::size_t tokencolumn) {
 		advanceChar(); //skip opening of strings "
 
-		std::string value;
-		while (pos<src.size() && src[pos]!='"') {
-			const char c = src[pos];
-			if (c == '\n' || c == '\r') {
-				errorAt(tokenline, tokencolumn, "Newline in string constant");
-			}
-			value.push_back(c);
+		const std::size_t start=pos;
+		while (pos < src.size() && src[pos] != '"') {
+			if (src[pos] == '\n' || src[pos] == '\r') errorAt(tokenline, tokencolumn, "Newline in string");
 			advanceChar();
 		}
+
+		std::string_view val = std::string_view(src).substr(start, pos - start);
+
 		if (pos>=src.size()) {
 			errorAt(tokenline, tokencolumn, "Unterminated string constant");
 		}
 		advanceChar();//skip closing of strings "
-		return std::make_unique<TextToken>(TokenType::STRING_CONST,value,tokenline, tokencolumn);
+		return std::make_unique<TextToken>(TokenType::STRING_CONST,val,tokenline, tokencolumn);
 	}
 
 	const Token& Tokenizer::current() const {
@@ -161,71 +179,82 @@ namespace nand2tetris::jack {
 		int value=0;
 
 		while (pos<src.size()&&std::isdigit(static_cast<unsigned char>(src[pos]))) {
-			value=value*10+(src[pos]-'0');
+			const int digit = src[pos] - '0';
+			// Check for overflow BEFORE it happens
+			// If value > 3276, the next multiplication (value * 10) will be >= 32770
+			// If value == 3276 and the digit > 7, it will be > 32767
+			if (value > 3276 || (value == 3276 && digit > 7)) {
+				errorAt(tokenline, tokencolumn, "Integer constant too large (max 32767)");
+			}
+
+			value = value * 10 + digit;
 			advanceChar();
-		}
-		if (value < 0 || value > 32767) {
-			errorAt(tokenline,tokencolumn,"Integer constant out of Jack range (0–32767)");
 		}
 
 		return std::make_unique<IntToken>(value,tokenline,tokencolumn);
 	}
 
-	bool Tokenizer::isKeywordString(const std::string& s, Keyword& outKw) {
-		using K=Keyword;
-		if (s=="class"){outKw=K::CLASS; return true;}
-		if (s=="method"){outKw=K::METHOD; return true;}
-		if (s=="function"){outKw=K::FUNCTION; return true;}
-		if (s=="constructor"){outKw=K::CONSTRUCTOR; return true;}
-		if (s=="int"){outKw=K::INT; return true;}
-		if (s=="char"){outKw=K::CHAR; return true;}
-		if (s=="boolean"){outKw=K::BOOLEAN; return true;}
-		if (s=="void"){outKw=K::VOID; return true;}
-		if (s=="var"){outKw=K::VAR; return true;}
-		if (s=="static"){outKw=K::STATIC; return true;}
-		if (s=="field"){outKw=K::FIELD; return true;}
-		if (s=="let"){outKw=K::LET; return true;}
-		if (s=="do"){outKw=K::DO; return true;}
-		if (s=="if"){outKw=K::IF; return true;}
-		if (s=="else"){outKw=K::ELSE; return true;}
-		if (s=="while"){outKw=K::WHILE; return true;}
-		if (s=="return"){outKw=K::RETURN; return true;}
-		if (s=="true"){outKw=K::TRUE_; return true;}
-		if (s=="false"){outKw=K::FALSE_; return true;}
-		if (s=="null"){outKw=K::NULL_; return true;}
-		if (s=="this"){outKw=K::THIS_; return true;}
+	bool Tokenizer::isKeywordString(const std::string_view s, Keyword& outKw) {
+		static const std::unordered_map<std::string_view, Keyword> keywordMap = {
+			{"class",       Keyword::CLASS},
+			{"method",      Keyword::METHOD},
+			{"function",    Keyword::FUNCTION},
+			{"constructor", Keyword::CONSTRUCTOR},
+			{"int",         Keyword::INT},
+			{"boolean",     Keyword::BOOLEAN},
+			{"char",        Keyword::CHAR},
+			{"void",        Keyword::VOID},
+			{"var",         Keyword::VAR},
+			{"static",      Keyword::STATIC},
+			{"field",       Keyword::FIELD},
+			{"let",         Keyword::LET},
+			{"do",          Keyword::DO},
+			{"if",          Keyword::IF},
+			{"else",        Keyword::ELSE},
+			{"while",       Keyword::WHILE},
+			{"return",      Keyword::RETURN},
+			{"true",        Keyword::TRUE_},
+			{"false",       Keyword::FALSE_},
+			{"null",        Keyword::NULL_},
+			{"this",        Keyword::THIS_}
+		};
+
+		const auto it = keywordMap.find(s);
+		if (it != keywordMap.end()) {
+			outKw = it->second;
+			return true;
+		}
 
 		return false;
 	}
 
 	std::unique_ptr<Token> Tokenizer::readIdentifierOrKeyword(const std::size_t tokenline, const std::size_t tokencolumn) {
-		std::string s;
-		while (pos<src.size()) {
-			const char c=src[pos];
-			if (std::isalnum(static_cast<unsigned char>(c))||c=='_') {
-				s.push_back(c);
-				advanceChar();
-			} else break;
+		const std::size_t start=pos;
+		while (pos < src.size() && (std::isalnum(static_cast<unsigned char>(src[pos])) || src[pos] == '_')) {
+			advanceChar();
 		}
+		// Create a view of the segment we just scanned
+		std::string_view s = std::string_view(src).substr(start, pos - start);
 
 		Keyword kw;
 		if (isKeywordString(s,kw)) {
 			return std::make_unique<KeywordToken>(kw,tokenline,tokencolumn);
-		} else {
-			return std::make_unique<TextToken>(TokenType::IDENTIFIER, s,tokenline,tokencolumn);
 		}
+
+		return std::make_unique<TextToken>(TokenType::IDENTIFIER, s,tokenline,tokencolumn);
 	}
 
-	[[noreturn]] void Tokenizer::errorAt(const std::size_t errLine, const std::size_t errColumn,const std::string& message) const {
+	[[noreturn]] void Tokenizer::errorAt(const std::size_t errLine, const std::size_t errColumn,const std::string_view
+		message) const {
 		const std::string full =
 			fileName + ":" +
 			std::to_string(errLine) + ":" +
 			std::to_string(errColumn) + ": " +
-			message;
+			std::string(message);
 		throw std::runtime_error(full);
 	}
 
-	[[noreturn]]void Tokenizer::errorHere(const std::string& message) const {
+	[[noreturn]]void Tokenizer::errorHere(const std::string_view message) const {
 		errorAt(line, column, message);
 	}
 

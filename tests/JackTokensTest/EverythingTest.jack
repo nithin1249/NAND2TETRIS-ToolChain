@@ -5,7 +5,7 @@ class EverythingTest {
 
     constructor EverythingTest new() {
         let x = 0;
-        let y = 1;
+        let y = 9999999999999999;
         let c = 'a'; // not a real Jack feature, just to see how tokenizer reacts
         return this;
     }

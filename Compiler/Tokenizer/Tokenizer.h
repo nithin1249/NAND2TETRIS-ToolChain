@@ -17,7 +17,11 @@ namespace nand2tetris::jack {
 			bool hasMoreTokens() const;
 			void advance();
 			const Token& current() const;
-			static bool isKeywordString(const std::string& s, Keyword& outKw);
+			static bool isKeywordString(std::string_view s, Keyword &outKw);
+			const Token& peek();
+			[[noreturn]] void errorHere(std::string_view message) const;
+			[[noreturn]] void errorAt(size_t errLine, size_t errColumn, std::string_view message) const;
+
 
 		private:
 			std::string src;
@@ -28,18 +32,19 @@ namespace nand2tetris::jack {
 			std::string fileName;
 
 			std::unique_ptr<Token> currentToken;
+			std::unique_ptr<Token> peekToken=nullptr;
 
 			void loadFile(const std::string& filePath);
 			void skipWhitespaceAndComments();
 			std::unique_ptr<Token> nextToken();
+			std::unique_ptr<Token> fetchNext();
+
 
 			std::unique_ptr<Token> readIdentifierOrKeyword(std::size_t tokenline, std::size_t tokencolumn);
 			std::unique_ptr<Token> readNumber(std::size_t tokenline, std::size_t tokencolumn);
 			std::unique_ptr<Token> readString(std::size_t tokenline, std::size_t tokencolumn);
 		    void advanceChar();
 
-			 [[noreturn]] void errorHere(const std::string& message) const;
-			 [[noreturn]] void errorAt(const std::size_t errLine,const std::size_t errColumn,const std::string& message) const;
 	};
 }
 
