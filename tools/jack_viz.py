@@ -108,7 +108,6 @@ def generate_html(data):
     </html>
     """
 if __name__ == "__main__":
-    import sys
 
     # 1. Check if an argument was actually passed
     if len(sys.argv) < 2:

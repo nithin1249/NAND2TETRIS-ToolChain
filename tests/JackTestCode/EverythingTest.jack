@@ -5,8 +5,8 @@ class EverythingTest {
 
     constructor EverythingTest new() {
         let x = 0;
-        let y = 9999999999999999;
-        let c = 'a'; // not a real Jack feature, just to see how tokenizer reacts
+        let y = 9;
+        let c = "a";
         return this;
     }
 
@@ -33,6 +33,6 @@ class EverythingTest {
             let i = i + 1;
         }
 
-        return !flag;
+        return ~flag;
     }
 }
