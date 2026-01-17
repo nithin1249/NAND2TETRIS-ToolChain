@@ -5,7 +5,7 @@ import os
 import sys
 
 def xml_to_dict(el):
-    """Converts Jack XML to JSON structure for D3.js."""
+    """Converts Jack XML to JSON structure for d3.v7.min.js."""
     tag_class = el.tag.lower()
     name = el.tag
     content = el.text.strip() if el.text and el.text.strip() else ""
@@ -15,6 +15,23 @@ def xml_to_dict(el):
     return node
 
 def generate_html(data):
+    # 1. Get the absolute path to the folder where THIS script lives
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # 2. Build the full path to the JS file (e.g., /.../tools/d3.v7.min.js)
+    d3_path = os.path.join(script_dir, "d3.v7.min.js")
+
+    d3_script = ""
+    if os.path.exists(d3_path):
+        print(f"[+] Found local D3.js at: {d3_path}")
+        with open(d3_path, "r", encoding="utf-8") as f:
+            d3_script = f"<script>\n{f.read()}\n</script>"
+    else:
+        print(f"[!] Warning: d3.v7.min.js not found at {d3_path}")
+        print("    -> Falling back to online CDN.")
+        d3_script = '<script src="https://d3js.org/d3.v7.min.js"></script>'
+
+    json_str = json.dumps(data)
     return f"""
     <!DOCTYPE html>
     <html>
@@ -44,12 +61,12 @@ def generate_html(data):
             .expression rect {{ fill: #d29922; stroke: #e3b341; }}
             .term rect {{ fill: #30363d; stroke: #8b949e; }}
         </style>
-        <script src="https://d3js.org/d3.v7.min.js"></script>
+        {d3_script}
     </head>
     <body>
         <div id="canvas"></div>
         <script>
-            const data = {json.dumps(data)};
+            const data = {json_str};
             
             const svg = d3.select("#canvas").append("svg")
                 .attr("width", "100%")
