@@ -11,9 +11,13 @@ namespace nand2tetris::jack {
         classes.insert(className);
     }
 
+    GlobalRegistry::GlobalRegistry() {
+        loadStandardLibrary();
+    }
+
     void GlobalRegistry::registerMethod(const std::string_view className, const std::string_view methodName,
-        const std::string_view returnType, const std::vector<std::string_view> &params, const bool isStatic,const int
-        line, const int column) {
+                                        const std::string_view returnType, const std::vector<std::string_view> &params, const bool isStatic,const int
+                                        line, const int column) {
         std::scoped_lock lock(mtx);
 
         // Check for duplicate method definition within the same class.
@@ -76,5 +80,126 @@ namespace nand2tetris::jack {
 
     int GlobalRegistry::getClassCount() const {
         return static_cast<int>(classes.size());
+    }
+
+    void GlobalRegistry::loadStandardLibrary() {
+        // --- MATH CLASS ---
+        registerClass("Math");
+        registerMethod("Math", "init",      "void", {},             true,  0, 0);
+        registerMethod("Math", "abs",       "int",  {"int"},        true,  0, 0);
+        registerMethod("Math", "multiply",  "int",  {"int", "int"}, true,  0, 0);
+        registerMethod("Math", "divide",    "int",  {"int", "int"}, true,  0, 0);
+        registerMethod("Math", "min",       "int",  {"int", "int"}, true,  0, 0);
+        registerMethod("Math", "max",       "int",  {"int", "int"}, true,  0, 0);
+        registerMethod("Math", "sqrt",      "int",  {"int"},        true,  0, 0);
+        registerMethod("Math","bit","boolean",{"int","int"},true,0,0);
+
+        // --- STRING CLASS ---
+        // Note: Constructors ('new') are usually treated as 'static' in the OS API logic
+        // because you call them on the class (String.new), not an object.
+        registerClass("String");
+        registerMethod("String", "new",           "String", {"int"},           true,  0, 0);
+        registerMethod("String", "dispose",       "void",   {},                false, 0, 0);
+        registerMethod("String", "length",        "int",    {},                false, 0, 0);
+        registerMethod("String", "charAt",        "char",   {"int"},           false, 0, 0);
+        registerMethod("String", "setCharAt",     "void",   {"int", "char"},   false, 0, 0);
+        registerMethod("String", "appendChar",    "String", {"char"},          false, 0, 0);
+        registerMethod("String", "eraseLastChar", "void",   {},                false, 0, 0);
+        registerMethod("String", "intValue",      "int",    {},                false, 0, 0);
+        registerMethod("String", "setInt",        "void",   {"int"},           false, 0, 0);
+        registerMethod("String", "backSpace",     "char",   {},                false, 0, 0);
+        registerMethod("String", "doubleQuote",   "char",   {},                false, 0, 0);
+        registerMethod("String", "newLine",       "char",   {},                false, 0, 0);
+        registerMethod("String","int2String","void",{},false,0,0);
+
+        // --- ARRAY CLASS ---
+        registerClass("Array");
+        registerMethod("Array", "new",     "Array", {"int"}, true,  0, 0);
+        registerMethod("Array", "dispose", "void",  {},      false, 0, 0);
+
+        // --- OUTPUT CLASS ---
+        registerClass("Output");
+        registerMethod("Output", "init", "void", {}, true, 0, 0);
+        registerMethod("Output", "moveCursor", "void", {"int", "int"}, true, 0, 0);
+        registerMethod("Output", "printChar", "void", {"char"}, true, 0, 0);
+        registerMethod("Output", "printString", "void", {"String"}, true, 0, 0);
+        registerMethod("Output", "printInt", "void", {"int"}, true, 0, 0);
+        registerMethod("Output", "println", "void", {}, true, 0, 0);
+        registerMethod("Output", "backSpace", "void", {}, true, 0, 0);
+        registerMethod("Output", "initMap", "void", {}, true, 0, 0);
+        registerMethod("Output", "create", "void", {"int","int","int","int","int","int","int","int","int","int","int","int"}, true, 0, 0);
+        registerMethod("Output", "getMap", "Array", {"char"}, true, 0, 0);
+        registerMethod("Output", "incrementCursor", "void", {}, true, 0, 0);
+        registerMethod("Output", "decrementCursor", "void", {}, true, 0, 0);
+
+        // --- SCREEN CLASS ---
+        registerClass("Screen");
+        registerMethod("Screen", "init",          "void", {},                              true, 0, 0);
+        registerMethod("Screen", "clearScreen",   "void", {},                              true, 0, 0);
+        registerMethod("Screen", "setColor",      "void", {"boolean"},                     true, 0, 0);
+        registerMethod("Screen", "drawPixel",     "void", {"int", "int"},                  true, 0, 0);
+        registerMethod("Screen", "drawLine",      "void", {"int", "int", "int", "int"},    true, 0, 0);
+        registerMethod("Screen", "drawRectangle", "void", {"int", "int", "int", "int"},    true, 0, 0);
+        registerMethod("Screen", "drawCircle",    "void", {"int", "int", "int"},           true, 0, 0);
+
+        // --- KEYBOARD CLASS ---
+        registerClass("Keyboard");
+        registerMethod("Keyboard", "init",       "void",   {},         true, 0, 0);
+        registerMethod("Keyboard", "keyPressed", "char",   {},         true, 0, 0);
+        registerMethod("Keyboard", "readChar",   "char",   {},         true, 0, 0);
+        registerMethod("Keyboard", "readLine",   "String", {"String"}, true, 0, 0);
+        registerMethod("Keyboard", "readInt",    "int",    {"String"}, true, 0, 0);
+
+        // --- MEMORY CLASS ---
+        registerClass("Memory");
+        registerMethod("Memory", "init",    "void", {},             true, 0, 0);
+        registerMethod("Memory", "peek",    "int",  {"int"},        true, 0, 0);
+        registerMethod("Memory", "poke",    "void", {"int", "int"}, true, 0, 0);
+        registerMethod("Memory", "alloc",   "int",  {"int"},        true, 0, 0);
+        registerMethod("Memory", "deAlloc", "void", {"Array"},        true, 0, 0);
+
+        // --- SYS CLASS ---
+        registerClass("Sys");
+        registerMethod("Sys", "init",  "void", {},      true, 0, 0);
+        registerMethod("Sys", "halt",  "void", {},      true, 0, 0);
+        registerMethod("Sys", "error", "void", {"int"}, true, 0, 0);
+        registerMethod("Sys", "wait",  "void", {"int"}, true, 0, 0);
+    }
+
+    void GlobalRegistry::dumpToJSON(const std::string &filename) const {
+        std::ofstream out(filename);
+        out << "{\n";
+        out << "  \"registry\": [\n";
+
+        bool firstMethod = true;
+
+        // Iterate over all classes
+        for (const auto& [className, methodMap] : methods) {
+
+            // Iterate over all methods in this class
+            for (const auto& [methodName, sig] : methodMap) {
+                if (!firstMethod) out << ",\n";
+                firstMethod = false;
+
+                out << "    {\n";
+                out << "      \"class\": \"" << className << "\",\n";
+                out << "      \"method\": \"" << methodName << "\",\n";
+                out << "      \"type\": \"" << (sig.isStatic ? "function" : "method") << "\",\n";
+                out << "      \"return\": \"" << sig.returnType << "\",\n";
+
+                // Format parameters: "int, char"
+                out << "      \"params\": \"";
+                for (size_t i = 0; i < sig.parameters.size(); ++i) {
+                    out << sig.parameters[i];
+                    if (i < sig.parameters.size() - 1) out << ", ";
+                }
+                out << "\"\n";
+                out << "    }";
+            }
+        }
+
+        out << "\n  ]\n";
+        out << "}\n";
+        out.close();
     }
 }

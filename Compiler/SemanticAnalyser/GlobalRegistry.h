@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <mutex>
+#include <fstream>
+#include <sstream>
 
 namespace nand2tetris::jack {
 
@@ -31,7 +33,7 @@ namespace nand2tetris::jack {
      */
     class GlobalRegistry {
         public:
-            GlobalRegistry()=default;
+            GlobalRegistry();
             ~GlobalRegistry()=default;
 
             /**
@@ -85,14 +87,24 @@ namespace nand2tetris::jack {
              */
             MethodSignature getSignature(std::string_view className,std::string_view methodName) const;
 
+            /**
+             * @brief Returns the number of registered classes.
+             * @return The count of classes.
+             */
             int getClassCount()const;
 
+            /**
+             * @brief Exports the entire registry to a JSON file for debugging.
+             * @param filename The output path (e.g., "registry_dump.json").
+             */
+            void dumpToJSON(const std::string& filename) const;
         private:
             // Map: ClassName -> (MethodName -> Signature)
             std::unordered_map<std::string_view,std::unordered_map<std::string_view,MethodSignature>> methods;
             // Set: ClassNames
             std::unordered_set<std::string_view> classes;
             mutable std::mutex mtx; // Thread safety
+            void loadStandardLibrary();
     };
 }
 
