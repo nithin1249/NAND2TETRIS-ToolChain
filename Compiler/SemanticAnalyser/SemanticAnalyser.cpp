@@ -52,10 +52,20 @@ namespace nand2tetris::jack {
     void SemanticAnalyser::analyseSubroutine(const SubroutineDecNode &sub, const SymbolTable &masterTable) {
         currentSubroutineName=sub.name;
 
+
         // Determine kind string for logic checks
         if (sub.subType == SubroutineType::CONSTRUCTOR) currentSubroutineKind = "constructor";
         else if (sub.subType == SubroutineType::FUNCTION) currentSubroutineKind = "function";
         else currentSubroutineKind = "method";
+
+        if (currentSubroutineKind == "constructor") {
+            if (sub.returnType != currentClassName) {
+                error("Constructor '" + std::string(sub.name) +
+                  "' must return type '" + std::string(currentClassName) +
+                  "', but found '" + std::string(sub.name) + "'.",
+                  sub);
+            }
+        }
 
         // 1. Create Local Scope (Copy Master)
         // We start with a copy of the class-level table to inherit static/field vars.
