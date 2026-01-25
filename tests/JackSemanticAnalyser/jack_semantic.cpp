@@ -121,16 +121,20 @@ int main(const int argc, char* argv[]) {
 
         // DUMP THE REGISTRY
         fs::path jsonPath;
+        std::string jsonFilename = inputPathArg.stem().string() + "_registry.json"; // e.g., StressTest_registry.json
+
         if (fs::is_directory(inputPathArg)) {
-            // If input was a directory, put JSON inside it
-            jsonPath = inputPathArg / "registry_debug.json";
+            // If input was a directory 'MyDir', file becomes 'MyDir/MyDir_registry.json'
+            jsonPath = inputPathArg / jsonFilename;
         } else {
-            // If input was a file, put JSON in the file's parent folder
-            jsonPath = inputPathArg.parent_path() / "registry_debug.json";
+            // If input was 'tests/MyFile.jack', file becomes 'tests/MyFile_registry.json'
+            jsonPath = inputPathArg.parent_path() / jsonFilename;
         }
+
         registry.dumpToJSON(jsonPath.string());
         std::cout << "[Debug] Registry dumped to: " << jsonPath.string() << std::endl;
 
+        // --- AUTO-LAUNCH PYTHON VISUALIZER ---
         fs::path scriptPath = "../tools/global_registry_viz.py";
         if (!fs::exists(scriptPath)) {
             scriptPath = "tools/global_registry_viz.py"; // Fallback for root execution
