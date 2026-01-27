@@ -16,6 +16,10 @@ add_executable(NAND2TETRIS main.cpp
         Compiler/SemanticAnalyser/GlobalRegistry.h
         Compiler/SemanticAnalyser/SemanticAnalyser.cpp
         Compiler/SemanticAnalyser/SemanticAnalyser.h
+        Compiler/VMWriter/VMWriter.cpp
+        Compiler/VMWriter/VMWriter.h
+        Compiler/CodeGenerator/CodeGenerator.cpp
+        Compiler/CodeGenerator/CodeGenerator.h
 )
 
 add_executable(jack_tokens
@@ -50,6 +54,26 @@ add_executable(jack_semantic
         Compiler/SemanticAnalyser/SemanticAnalyser.cpp
         Compiler/SemanticAnalyser/SemanticAnalyser.h
         tests/JackSemanticAnalyser/jack_semantic.cpp
+)
+
+add_executable(jack_codegen
+        Compiler/Tokenizer/Tokenizer.cpp
+        Compiler/Tokenizer/Tokenizer.h
+        Compiler/Tokenizer/TokenTypes.h
+        Compiler/Parser/AST.h
+        Compiler/Parser/Parser.cpp
+        Compiler/Parser/Parser.h
+        Compiler/SemanticAnalyser/SymbolTable.cpp
+        Compiler/SemanticAnalyser/SymbolTable.h
+        Compiler/SemanticAnalyser/GlobalRegistry.cpp
+        Compiler/SemanticAnalyser/GlobalRegistry.h
+        Compiler/SemanticAnalyser/SemanticAnalyser.cpp
+        Compiler/SemanticAnalyser/SemanticAnalyser.h
+        Compiler/VMWriter/VMWriter.cpp
+        Compiler/VMWriter/VMWriter.h
+        Compiler/CodeGenerator/CodeGenerator.cpp
+        Compiler/CodeGenerator/CodeGenerator.h
+        tests/JackCodeGenTest/jack_codegen.cpp
 )
 
 

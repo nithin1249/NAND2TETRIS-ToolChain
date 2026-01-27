@@ -71,140 +71,140 @@ namespace nand2tetris::jack {
         // --- Grammar Rules (Recursive Descent) ---
 
         /**
-         * @brief Compiles a complete class declaration.
+         * @brief Parses a complete class declaration.
          *
          * Grammar: 'class' className '{' classVarDec* subroutineDec* '}'
          *
          * @return A unique_ptr to the resulting ClassNode.
          */
-        std::unique_ptr<ClassNode> compileClass();
+        std::unique_ptr<ClassNode> parseClass();
 
         /**
-         * @brief Compiles a static or field variable declaration.
+         * @brief Parses a static or field variable declaration.
          *
          * Grammar: ('static' | 'field') type varName (',' varName)* ';'
          *
          * @return A unique_ptr to the resulting ClassVarDecNode.
          */
-        std::unique_ptr<ClassVarDecNode> compileClassVarDec();
+        std::unique_ptr<ClassVarDecNode> parseClassVarDec();
 
         /**
-         * @brief Compiles a subroutine (constructor, function, or method).
+         * @brief Parses a subroutine (constructor, function, or method).
          *
          * Grammar: ('constructor' | 'function' | 'method') ('void' | type) subroutineName '(' parameterList ')' subroutineBody
          *
          * @return A unique_ptr to the resulting SubroutineDecNode.
          */
-        std::unique_ptr<SubroutineDecNode> compileSubroutine();
+        std::unique_ptr<SubroutineDecNode> parseSubroutine();
 
         /**
-         * @brief Compiles a local variable declaration.
+         * @brief Parses a local variable declaration.
          *
          * Grammar: 'var' type varName (',' varName)* ';'
          *
          * @return A unique_ptr to the resulting VarDecNode.
          */
-        std::unique_ptr<VarDecNode> compileVarDec();
+        std::unique_ptr<VarDecNode> parseVarDec();
 
         /**
-         * @brief Compiles a sequence of statements.
+         * @brief Parses a sequence of statements.
          *
          * Grammar: statement*
          *
          * @return A vector of unique_ptrs to StatementNodes.
          */
-        std::vector<std::unique_ptr<StatementNode>> compileStatements();
+        std::vector<std::unique_ptr<StatementNode>> parseStatements();
 
         /**
-         * @brief Compiles a single statement.
+         * @brief Parses a single statement.
          *
-         * Dispatches to specific statement compilers (let, if, while, do, return) based on the keyword.
+         * Dispatches to specific statement parsers (let, if, while, do, return) based on the keyword.
          *
          * @return A unique_ptr to the resulting StatementNode.
          */
-        std::unique_ptr<StatementNode> compileStatement();
+        std::unique_ptr<StatementNode> parseStatement();
 
         /**
-         * @brief Compiles a 'let' statement.
+         * @brief Parses a 'let' statement.
          *
          * Grammar: 'let' varName ('[' expression ']')? '=' expression ';'
          *
          * @return A unique_ptr to the resulting LetStatementNode.
          */
-        std::unique_ptr<LetStatementNode> compileLetStatement();
+        std::unique_ptr<LetStatementNode> parseLetStatement();
 
         /**
-         * @brief Compiles an 'if' statement.
+         * @brief Parses an 'if' statement.
          *
          * Grammar: 'if' '(' expression ')' '{' statements '}' ('else' '{' statements '}')?
          *
          * @return A unique_ptr to the resulting IfStatementNode.
          */
-        std::unique_ptr<IfStatementNode> compileIfStatement();
+        std::unique_ptr<IfStatementNode> parseIfStatement();
 
         /**
-         * @brief Compiles a 'while' statement.
+         * @brief Parses a 'while' statement.
          *
          * Grammar: 'while' '(' expression ')' '{' statements '}'
          *
          * @return A unique_ptr to the resulting WhileStatementNode.
          */
-        std::unique_ptr<WhileStatementNode> compileWhileStatement();
+        std::unique_ptr<WhileStatementNode> parseWhileStatement();
 
         /**
-         * @brief Compiles a 'do' statement.
+         * @brief Parses a 'do' statement.
          *
          * Grammar: 'do' subroutineCall ';'
          *
          * @return A unique_ptr to the resulting DoStatementNode.
          */
-        std::unique_ptr<DoStatementNode> compileDoStatement();
+        std::unique_ptr<DoStatementNode> parseDoStatement();
 
         /**
-         * @brief Compiles a 'return' statement.
+         * @brief Parses a 'return' statement.
          *
          * Grammar: 'return' expression? ';'
          *
          * @return A unique_ptr to the resulting ReturnStatementNode.
          */
-        std::unique_ptr<ReturnStatementNode> compileReturnStatement();
+        std::unique_ptr<ReturnStatementNode> parseReturnStatement();
 
         /**
-         * @brief Compiles an expression.
+         * @brief Parses an expression.
          *
          * Grammar: term (op term)*
          *
          * @return A unique_ptr to the resulting ExpressionNode.
          */
-        std::unique_ptr<ExpressionNode> compileExpression();
+        std::unique_ptr<ExpressionNode> parseExpression();
 
         /**
-         * @brief Compiles a term within an expression.
+         * @brief Parses a term within an expression.
          *
          * Grammar: integerConstant | stringConstant | keywordConstant | varName | varName '[' expression ']' | subroutineCall | '(' expression ')' | unaryOp term
          *
          * @return A unique_ptr to the resulting ExpressionNode (which is a specific type of term).
          */
-        std::unique_ptr<ExpressionNode> compileTerm();
+        std::unique_ptr<ExpressionNode> parseTerm();
 
         /**
-         * @brief Compiles a comma-separated list of expressions.
+         * @brief Parses a comma-separated list of expressions.
          *
          * Used in subroutine calls.
          * Grammar: (expression (',' expression)*)?
          *
          * @return A vector of expression nodes.
          */
-        std::vector<std::unique_ptr<ExpressionNode>> compileExpressionList();
+        std::vector<std::unique_ptr<ExpressionNode>> parseExpressionList();
 
         /**
-         * @brief Compiles a subroutine call.
+         * @brief Parses a subroutine call.
          *
          * Grammar: subroutineName '(' expressionList ')' | (className | varName) '.' subroutineName '(' expressionList ')'
          *
          * @return A unique_ptr to the resulting CallNode.
          */
-        std::unique_ptr<CallNode> compileSubroutineCall();
+        std::unique_ptr<CallNode> parseSubroutineCall();
 
         /**
          * @brief Checks if the current token is a binary operator.

@@ -50,10 +50,6 @@ CompilationUnit parseJob(const std::string& filePath, GlobalRegistry* registry) 
     Parser parser(*tokenizer,*registry);
     auto ast = parser.parse();
 
-    if (ast) {
-        registry->registerClass(ast->getClassName());
-    }
-
     log("[Parsed] " + filePath);
     return {std::move(tokenizer), std::move(ast), filePath};
 }

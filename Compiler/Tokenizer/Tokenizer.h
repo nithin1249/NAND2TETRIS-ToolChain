@@ -6,7 +6,7 @@
 #define NAND2TETRIS_TOKENIZER_H
 
 #include <string>
-#include <iostream>
+#include <string_view>
 #include <memory>
 #include "TokenTypes.h"
 

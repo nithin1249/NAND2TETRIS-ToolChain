@@ -1,5 +1,5 @@
 //
-// Created by Nithin Kondabathini on 23/11/2025.
+// Created by Nithin Kondabathini on 23/1/2026.
 //
 
 #ifndef NAND2TETRIS_TOKEN_H
@@ -75,7 +75,7 @@ namespace nand2tetris::jack {
      */
 
     inline bool isKeywordString(std::string_view s, Keyword &outKw) {
-        std::unordered_map<std::string_view, Keyword> keywordMap = {
+        static const std::unordered_map<std::string_view, Keyword> keywordMap = {
             {"class",       Keyword::CLASS},
             {"method",      Keyword::METHOD},
             {"function",    Keyword::FUNCTION},

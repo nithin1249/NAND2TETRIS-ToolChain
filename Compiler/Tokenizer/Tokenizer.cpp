@@ -6,6 +6,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <unordered_map>
+#include <string_view>
 
 namespace nand2tetris::jack {
 
@@ -147,7 +148,7 @@ namespace nand2tetris::jack {
         const char c = src[pos];
 
         // Check for single-character symbols used in Jack.
-        constexpr std::string symbols = "{}()[].,;+-*/&|<>=~";
+        constexpr std::string_view symbols = "{}()[].,;+-*/&|<>=~";
         if (symbols.find(c) != std::string_view::npos) {
             std::string_view symView = std::string_view(src).substr(pos, 1);
             advanceChar();

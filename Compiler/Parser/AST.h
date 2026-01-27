@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 #include <memory>
+#include<iostream>
 #include "../Tokenizer/TokenTypes.h"
 
 namespace nand2tetris::jack {
@@ -91,6 +92,7 @@ namespace nand2tetris::jack {
             const int column; ///< Column number in source.
             ASTNodeType nodeType; ///< The type of the node.
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
     };
 
     /**
@@ -112,6 +114,7 @@ namespace nand2tetris::jack {
             std::string_view type; ///< The data type of the variable(s) (e.g., "int", "boolean", "MyClass").
             std::vector<std::string_view> varNames; ///< A list of variable names declared in this statement.
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
         public:
             /**
              * @brief Constructs a ClassVarDecNode.
@@ -159,6 +162,7 @@ namespace nand2tetris::jack {
             std::string_view type; ///< The data type of the variable(s).
             std::vector<std::string_view> varNames; ///< A list of variable names declared.
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
         public:
             /**
              * @brief Constructs a VarDecNode.
@@ -233,6 +237,7 @@ namespace nand2tetris::jack {
     class StatementNode : public Node {
         protected:
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
         public:
             explicit StatementNode(const ASTNodeType nodeType,const int l, const int c):Node(nodeType,l,c){};
             ~StatementNode() override = default;
@@ -246,6 +251,7 @@ namespace nand2tetris::jack {
     class ExpressionNode : public Node {
         protected:
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
         public:
             explicit ExpressionNode(const ASTNodeType nodeType,const int l, const int c):Node(nodeType,l,c){};
             ~ExpressionNode() override = default;
@@ -260,6 +266,7 @@ namespace nand2tetris::jack {
         protected:
             int value; ///< The integer value.
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
         public:
             /**
              * @brief Constructs an IntegerLiteralNode.
@@ -286,6 +293,7 @@ namespace nand2tetris::jack {
         protected:
             std::string_view value; ///< The string value (without quotes).
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
         public:
             /**
              * @brief Constructs a StringLiteralNode.
@@ -312,6 +320,7 @@ namespace nand2tetris::jack {
         protected:
             Keyword value; ///< The keyword value.
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
         public:
             /**
              * @brief Constructs a KeywordLiteralNode.
@@ -363,6 +372,7 @@ namespace nand2tetris::jack {
             char op; ///< The operator symbol ('+', '-', '*', '/', '&', '|', '<', '>', '=').
             std::unique_ptr<ExpressionNode> right; ///< The right operand.
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
         public:
             /**
              * @brief Constructs a BinaryOpNode.
@@ -401,6 +411,7 @@ namespace nand2tetris::jack {
             char op; ///< The operator symbol ('-', '~').
             std::unique_ptr<ExpressionNode> term; ///< The operand.
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
         public:
             /**
              * @brief Constructs a UnaryOpNode.
@@ -434,6 +445,7 @@ namespace nand2tetris::jack {
             std::string_view functionName;   ///< The name of the subroutine being called.
             std::vector<std::unique_ptr<ExpressionNode>> arguments; ///< The list of arguments passed to the call.
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
         public:
             /**
              * @brief Constructs a CallNode.
@@ -486,6 +498,7 @@ namespace nand2tetris::jack {
             std::string_view name; ///< The name of the identifier.
             std::unique_ptr<ExpressionNode> indexExpr; ///< The index expression if it's an array access, otherwise nullptr.
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
         public:
             /**
              * @brief Constructs an IdentifierNode.
@@ -524,6 +537,7 @@ namespace nand2tetris::jack {
             std::unique_ptr<ExpressionNode> indexExpr; ///< The index expression for array assignment (optional).
             std::unique_ptr<ExpressionNode> valueExpr; ///< The expression evaluating to the new value.
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
         public:
             /**
              * @brief Constructs a LetStatementNode.
@@ -571,6 +585,7 @@ namespace nand2tetris::jack {
             std::vector<std::unique_ptr<StatementNode>> ifStatements; ///< The statements to execute if true.
             std::vector<std::unique_ptr<StatementNode>> elseStatements; ///< The statements to execute if false (optional).
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
         public:
             /**
              * @brief Constructs an IfStatementNode.
@@ -623,6 +638,7 @@ namespace nand2tetris::jack {
             std::unique_ptr<ExpressionNode> condition; ///< The loop condition.
             std::vector<std::unique_ptr<StatementNode>> body; ///< The loop body statements.
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
         public:
             /**
              * @brief Constructs a WhileStatementNode.
@@ -664,6 +680,7 @@ namespace nand2tetris::jack {
         protected:
             std::unique_ptr<CallNode> callExpression; ///< The subroutine call expression.
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
         public:
             /**
              * @brief Constructs a DoStatementNode.
@@ -696,6 +713,8 @@ namespace nand2tetris::jack {
         protected:
             std::unique_ptr<ExpressionNode> expression; ///< The return value expression (optional).
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
+
         public:
             /**
              * @brief Constructs a ReturnStatementNode.
@@ -735,6 +754,8 @@ namespace nand2tetris::jack {
             std::vector<std::unique_ptr<VarDecNode>> localVars; ///< The local variable declarations.
             std::vector<std::unique_ptr<StatementNode>> statements; ///< The body statements.
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
+
         public:
             /**
              * @brief Constructs a SubroutineDecNode.
@@ -805,6 +826,7 @@ namespace nand2tetris::jack {
             std::vector<std::unique_ptr<ClassVarDecNode>> classVars; ///< The class-level variable declarations.
             std::vector<std::unique_ptr<SubroutineDecNode>> subroutineDecs; ///< The subroutine declarations.
             friend class SemanticAnalyser;
+            friend class CodeGenerator;
         public:
             /**
              * @brief Constructs a ClassNode.
