@@ -1,164 +1,94 @@
-# NAND2TETRIS Toolchain (Custom C++ Implementation)
+# Nand2Tetris: Jack Compiler 
 
-This repository contains a complete custom toolchain for the **NAND2TETRIS** computer systems course, implemented fully in **C++**. The aim is to recreate the entire software stack that drives the Hack computer — from high-level Jack source code down to binary machine code — using clean architecture, modular components, and accurate conformance to the official specifications.
+![Language](https://img.shields.io/badge/language-C%2B%2B17-blue.svg)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
+![Architecture](https://img.shields.io/badge/architecture-Modular-orange.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-This project demonstrates how a high-level language is gradually lowered into executable machine instructions through multiple well-defined stages. Each stage of the pipeline is implemented as an independent module with its own headers, source files, and test tools.
+A high-performance, cross-platform compiler for the Jack programming language.
 
----
+This project goes beyond the standard Nand2Tetris course requirements by implementing a **modern, modular compilation pipeline**. It serves as a robust Frontend Compiler, currently configured to translate high-level `.jack` source code into optimized Virtual Machine (`.vm`) intermediate code, but designed to target any architecture.
 
-## Overview
-
-This toolchain implements the full Jack-to-Hack compilation pipeline. The architecture is divided into the following major components:
-
-```
- Jack Program
-      ↓
- [Tokenizer]  →  Tokens
-      ↓
- [Parser]  →  Parse Tree (AST)
-      ↓
- [Jack Compiler]  →  VM Code (.vm)
-      ↓
- [VM Translator]  →  Hack Assembly (.asm)
-      ↓
- [Hack Assembler]  →  Hack Machine Code (.hack)
-      ↓
- [Emulator] (WIP) → Execution
-```
-
-Each stage takes structured input, transforms it according to the NAND2TETRIS specifications, and provides clean output for the next module.
-
-### Component Summary
-
-* **Tokenizer**: Breaks source code into valid tokens.
-* **Parser**: Constructs the program structure based on Jack grammar.
-* **Compiler**: Converts the parsed structure into VM instructions.
-* **VM Translator**: Converts stack-based VM instructions to Hack Assembly.
-* **Assembler**: Converts assembly to 16-bit Hack binary machine code.
-* **Emulator (WIP)**: Simulates the Hack CPU and memory system.
+**[📥 Download Latest Release](LINK_TO_YOUR_GITHUB_RELEASES_PAGE)** *(Replace with your actual URL)*
 
 ---
 
-## Features
+## 🚀 Key Features & Performance
 
-* End‑to‑end Jack‑to‑Hack toolchain.
-* Clean modular architecture (Tokenizer → Parser → Compiler → VM Translator → Assembler).
-* Testable components with standalone executables.
-* CLion + CMake build workflow.
-* Strict adherence to NAND2TETRIS specifications.
-* Error‑handled tokenizer and parser with detailed diagnostics.
-
----
-
-## Directory Structure
-
-```
-project/
-├── Compiler/
-│   ├── Tokenizer.h
-│   ├── Parser.h
-│   ├── Compiler.h
-│   └── ...
-├── VMTranslator/
-│   └── ...
-├── Assembler/
-│   └── ...
-├── Emulator/ (WIP)
-│   └── ...
-├── tests/
-│   └── jack_tokens.cpp
-├── CMakeLists.txt
-└── README.md
-```
+* **🧩 Modular Backend Architecture:** The compiler is architected with strict separation of concerns. The Code Generator is a swappable module; as long as the Interface is respected, the compiler can be retargeted to output WebAssembly, LLVM IR, or native binary without touching the frontend.
+* **⚡ Zero-Copy String Processing:** Utilizes `std::string_view` throughout the Tokenizer and Parser to eliminate redundant memory allocations, significantly reducing heap usage during compilation.
+* **🧵 Parallel Compilation:** Implements multi-threading (via `std::future`) to compile classes in parallel, utilizing all available CPU cores.
+* **🔍 Semantic Analysis:** Includes a dedicated semantic pass that validates type safety, variable scope, and class existence *before* code generation.
+* **🛠 Visualization Suite:** Built-in tools to visualize the Abstract Syntax Tree (AST) and inspect the Global Symbol Registry in real-time.
 
 ---
 
-## Build & Run
+## 🏗 Architectural Pipeline
 
-### Clone and Build
+The compiler follows a four-stage pipeline designed for extensibility:
 
-```bash
-git clone <repository-url>
-cd <project>
-cmake -B build
-cmake --build build
-```
+### 1. Tokenization (Lexical Analysis)
+* **Mechanism:** A custom, regex-free state machine.
+* **Detail:** Scans the source code character-by-character to produce tokens. By avoiding standard regex libraries, the tokenizer achieves maximum throughput with minimal overhead.
 
-### Run Tokenizer
+### 2. Parsing (Syntax Analysis)
+* **Mechanism:** Recursive Descent Parser with LL(1) lookahead.
+* **Detail:** Constructs a full Abstract Syntax Tree (AST) using `std::unique_ptr`. This stage captures the *intent* of the code in a format that is completely independent of the final output language.
 
-```bash
-./build/jack_tokens <path-to-jack-file>
-```
+### 3. Semantic Analysis (The "Modern" Layer)
+* **Mechanism:** Global Symbol Registry & Scope Checking.
+* **Detail:** A dedicated pass builds symbol tables for all classes, methods, and variables. It catches complex errors like "undefined variable" or "type mismatch" that simple one-pass compilers miss.
 
-### Run Parser
-
-```bash
-./build/jack_parser <file>
-```
-
-Each module builds a small CLI tool for testing.
+### 4. Modular Code Generation (The Interface)
+* **Mechanism:** AST Traversal $\rightarrow$ Interface $\rightarrow$ VM Emission.
+* **Detail:** The compiler defines a strict **Code Generation Interface**. The current implementation plugs into this interface to emit Hack VM code. However, this module can be swapped entirely to target different virtual machines or hardware architectures while reusing 100% of the frontend analysis.
 
 ---
 
-## How the Toolchain Works
+## 🔮 Future Roadmap: The Binary Backend
 
-### 1. Tokenizer
+Because of the **Modular Architecture** described above, our roadmap involves swapping the current "VM Writer" module with a "Native Writer" module.
 
-* Loads the entire `.jack` file into a `std::string`.
-* Produces tokens (keywords, symbols, identifiers, integers, strings).
-* Implements spec‑correct handling of whitespace and comments.
-* Generates errors for illegal characters (e.g., negative integers).
-
-### 2. Parser
-
-* Builds a full Parse Tree according to Jack grammar.
-* Implements recursive‑descent parsing.
-* Produces structured syntax trees for the compiler.
-
-### 3. Jack → VM Compiler
-
-* Converts Jack class structures into VM functions.
-* Handles expressions, control flow, subroutines.
-* Matches exact VM output specification.
-
-### 4. VM Translator
-
-* Stack‑based VM instruction translation.
-* Memory segments, comparisons, arithmetic, branching.
-
-### 5. Hack Assembler
-
-* Two‑pass assembler generating `.hack` binary files.
-* Handles symbols, labels, and A/C-instructions.
-
-### 6. Emulator (In Progress)
-
-* Planned features:
-
-    * RAM + ROM simulation
-    * ALU operations
-    * Program counter and instruction cycle
-    * GUI visualizer later
+**In Development:**
+We are working on a backend extension that translates the parsed AST directly into **Native Machine Code** (Binary). This demonstrates the power of the modular design: transforming the tool from a VM-translator into a true native compiler.
 
 ---
 
-## Goals of the Project
+## 📦 Installation
 
-* Demonstrate mastery of low‑level system construction.
-* Provide a real project showcasing compiler design, parsing, tokenization, and virtual machine implementation.
-* Build a complete, professional‑grade toolchain instead of relying on course‑provided tools.
+### 1. Download
+Get the `JackCompiler_Release.zip` from the **[Releases Page](LINK_TO_YOUR_GITHUB_RELEASES_PAGE)**.
 
----
+### 2. FOLDER CONTENTS of ZIP File:
+- bin/      : Compiler binaries for Windows, macOS, and Linux.
+- os/       : The Jack Standard Library (Math, Array, etc.).
+- tools/    : Visualization scripts (Python + D3.js).
+- JackCode/ : Example Jack programs.
 
-## Future Improvements
 
-* Full Hack CPU emulator.
-* Chip-level simulator for logic gates.
-* Optimization passes in compilation.
-* GUI frontend for code visualization.
+### 3. Install
 
----
+#### Windows
+1. Extract the zip file.
+2. Double-click **`install.bat`**.
+3. Follow the prompt to add the installation folder to your `PATH`.
 
-## License
+#### macOS / Linux
+1. Extract the zip file.
+2. Open your terminal in the extracted folder.
+3. Run the installer:
+   ```bash
+   chmod +x install.sh
+   ./install.sh
 
-Specify the license here if applicable.
+### 4.USAGE
+
+1. Compile a project (produces .vm files):
+   jack <path_to_project_folder>
+
+2. Visualize the Syntax Tree (AST):
+   jack <path_to_project_folder> --viz-ast
+
+3. Inspect Symbol Tables & Semantic Analysis:
+   jack <path_to_project_folder> --viz-checker
+

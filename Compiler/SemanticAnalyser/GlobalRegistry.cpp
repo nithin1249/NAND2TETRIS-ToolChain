@@ -21,7 +21,7 @@ namespace nand2tetris::jack {
         std::scoped_lock lock(mtx);
 
         // Check for duplicate method definition within the same class.
-        if (methods[className].contains(methodName)) {
+        if (methods[className].count(methodName)) {
             const auto& existing = methods[className][methodName];
             const std::string msg =
                 "Semantic Error [" + std::to_string(line) + ":" + std::to_string(column) + "]: " +
@@ -50,7 +50,7 @@ namespace nand2tetris::jack {
             true;*/
 
         // Check against the set of user-defined classes registered so far.
-        return classes.contains(className);
+        return classes.count(className);
     }
 
     bool GlobalRegistry::methodExists(const std::string_view className, const std::string_view methodName)const {
@@ -60,7 +60,7 @@ namespace nand2tetris::jack {
             return false;
         }
         // Then, check if the method exists within that class.
-        return it->second.contains(methodName);
+        return it->second.count(methodName);
     }
 
     MethodSignature GlobalRegistry::getSignature(const std::string_view className,

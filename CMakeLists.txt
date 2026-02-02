@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 4.1.2)
 project(NAND2TETRIS)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF) # Ensure strictly standard C++)
 
@@ -34,10 +34,10 @@ if(APPLE)
     set_target_properties(NAND2TETRIS PROPERTIES OUTPUT_NAME "NAND2TETRIS_mac")
 elseif(WIN32)
     # On Windows -> produces "jack_win.exe" (CMake adds .exe automatically)
-    set_target_properties(NAND2TETRIS PROPERTIES OUTPUT_NAME "NAND2TETRIS_win")
+    set_target_properties(NAND2TETRIS PROPERTIES OUTPUT_NAME "JackCompiler_Release/bin/NAND2TETRIS_win.exe")
 elseif(UNIX)
     # On Linux -> produces "jack_linux"
-    set_target_properties(NAND2TETRIS PROPERTIES OUTPUT_NAME "NAND2TETRIS_linux")
+    set_target_properties(NAND2TETRIS PROPERTIES OUTPUT_NAME "JackCompiler_Release/bin/NAND2TETRIS_linux")
 endif()
 
 

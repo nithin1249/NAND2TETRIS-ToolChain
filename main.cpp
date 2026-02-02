@@ -11,6 +11,16 @@
 #include <functional>
 #include <cstdlib>
 
+
+
+#include "Compiler/Tokenizer/Tokenizer.h"
+#include "Compiler/Parser/Parser.h"
+#include "Compiler/Parser/AST.h"
+#include "Compiler/SemanticAnalyser/GlobalRegistry.h"
+#include "Compiler/SemanticAnalyser/SemanticAnalyser.h"
+#include "Compiler/CodeGenerator/CodeGenerator.h"
+
+
 #ifdef _WIN32
 	#include <windows.h>
 	#include <psapi.h>
@@ -19,13 +29,6 @@
 	#include <sys/resource.h>
 	#include <unistd.h>
 #endif
-
-#include "Compiler/Tokenizer/Tokenizer.h"
-#include "Compiler/Parser/Parser.h"
-#include "Compiler/Parser/AST.h"
-#include "Compiler/SemanticAnalyser/GlobalRegistry.h"
-#include "Compiler/SemanticAnalyser/SemanticAnalyser.h"
-#include "Compiler/CodeGenerator/CodeGenerator.h"
 
 using namespace nand2tetris::jack;
 namespace fs = std::filesystem;
@@ -166,7 +169,7 @@ fs::path getTempPath(const std::string& filename) {
 // Launches the unified visualization dashboard (Registry + Symbol Tables).
 void runUnifiedViz(const GlobalRegistry& registry, const std::vector<CompilationUnit>& units) {
 	// 1. Dump Registry to Temp
-	std::string regPath = getTempPath("jack_unified_reg.json");
+	std::string regPath = getTempPath("jack_unified_reg.json").string();
 	registry.dumpToJSON(regPath);
 
 	// 2. Dump Symbol Tables for all files
