@@ -2,3 +2,6 @@
 tests/**/*.xml
 tests/**/*.json
 tests/**/*.vm
+JackCompiler_Release/
+JackCompiler_Release
+JackOS/
