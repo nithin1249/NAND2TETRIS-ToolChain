@@ -2,10 +2,10 @@ import sys
 import os
 import xml.etree.ElementTree as ET
 import json
-import webview  # pip install pywebview
+import webview
 
 
-# 1. PARSER (Same as before)
+# 1. PARSER
 def parse_node(element):
     tag = element.tag
     text = element.text.strip() if element.text else ""
@@ -36,8 +36,7 @@ def get_d3_script():
     return '<script src="https://d3js.org/d3.v7.min.js"></script>'
 
 
-# 3. HTML GENERATOR (Dropdown UI)
-
+# 3. HTML GENERATOR
 def get_html_content(files_payload, d3_script_tag):
     json_str = json.dumps(files_payload)
     return f"""
@@ -169,7 +168,7 @@ def get_html_content(files_payload, d3_script_tag):
     """
 
 if __name__ == "__main__":
-    # 1. Validation: Arguments
+    # Validation: Arguments
     if len(sys.argv) < 2:
         print("Error: No XML files provided.", file=sys.stderr)
         print("Usage: python jack_viz.py <file1.xml> <file2.xml> ...", file=sys.stderr)
@@ -179,7 +178,7 @@ if __name__ == "__main__":
     files_payload = []
     errors = []
 
-    # 2. Parse Files with Explicit Error Handling
+    # Parse Files with Explicit Error Handling
     for xml_path in xml_files:
         if not os.path.exists(xml_path):
             print(f" Error: File not found: {xml_path}", file=sys.stderr)
@@ -209,14 +208,14 @@ if __name__ == "__main__":
             print(f" Unexpected Error processing {xml_path}: {e}", file=sys.stderr)
             errors.append(xml_path)
 
-    # 3. Critical Failure Check
+    # Critical Failure Check
     if not files_payload:
         print("\n Fatal: No valid Jack ASTs could be loaded.", file=sys.stderr)
         if errors:
             print(f"Failed files: {', '.join(errors)}", file=sys.stderr)
         sys.exit(1)
 
-    # 4. Launch GUI
+    # Launch GUI
     try:
         html_content = get_html_content(files_payload, get_d3_script())
         webview.create_window(

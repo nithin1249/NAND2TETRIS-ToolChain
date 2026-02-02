@@ -1,22 +1,19 @@
 import json
 import os
 import sys
-import atexit # <--- NEW: Required for cleanup on exit
+import atexit
+import traceback
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, DataTable, Input
 from textual.containers import Container
 from textual.binding import Binding
 
 class RegistryDashboard(App):
-    """A futuristic TUI for inspecting the Jack Compiler Global Registry."""
-
     CSS = """
     Screen {
         layout: vertical;
         background: $surface;
     }
-    
-    /* TIGHT LAYOUT: Removed margins and fixed heights */
     .search-container {
         dock: top;
         height: auto;
@@ -24,7 +21,6 @@ class RegistryDashboard(App):
         padding: 0 1;
         background: $surface;
     }
-    
     Input {
         width: 100%;
         height: auto;
@@ -33,18 +29,16 @@ class RegistryDashboard(App):
         background: $panel;
         color: $text;
     }
-
     DataTable {
         height: 1fr;
         border: none;
         margin: 0;
         background: $surface;
     }
-    
     DataTable > .datatable--header {
         text-style: bold;
         background: $accent;
-        color: auto; /* <--- FIXED: 'auto' ensures readability on accent color */
+        color: auto;
     }
     """
 
@@ -60,45 +54,44 @@ class RegistryDashboard(App):
         self.raw_data = []
 
     def compose(self) -> ComposeResult:
-        # Using a simple label for the placeholder based on filename
-        filename = os.path.basename(self.json_path) if self.json_path else "Registry"
         yield Container(
-            Input(placeholder=f"Search {filename}...", id="search"),
+            Input(placeholder=f"Search Registry", id="search"),
             classes="search-container"
         )
         yield DataTable(zebra_stripes=True)
         yield Footer()
 
     def on_mount(self) -> None:
-        self.title = "Global Registry"
-        table = self.query_one(DataTable)
-        table.cursor_type = "row"
+        try:
+            self.title = "Global Registry"
+            table = self.query_one(DataTable)
+            table.cursor_type = "row"
+            table.add_columns("Class", "Method", "Type", "Return", "Parameters")
+            self.load_data()
 
-        # Add styled columns
-        table.add_columns("Class", "Method", "Type", "Return", "Parameters")
+            table.focus()
 
-        self.load_data()
+        except Exception as e:
+            self.notify(f"Critical Error on Mount: {e}", severity="error", timeout=10)
 
     def load_data(self):
-        table = self.query_one(DataTable)
-        table.clear()
-        self.raw_data = []
-
-        if not os.path.exists(self.json_path):
-            self.notify(f"File not found: {self.json_path}", severity="error")
-            return
-
         try:
+            table = self.query_one(DataTable)
+            table.clear()
+            self.raw_data = []
+
+            if not os.path.exists(self.json_path):
+                self.notify(f"File not found: {self.json_path}", severity="error")
+                return
+
             with open(self.json_path, 'r') as f:
                 data = json.load(f)
 
             registry = data.get("registry", [])
-            # Sort: OS classes first, then User classes
             registry.sort(key=lambda x: (x['class'] not in ['Math','Array','Output','Screen','Keyboard','Memory','Sys','String'], x['class'], x['method']))
 
             for item in registry:
                 kind = "ƒ static" if item['type'] == 'function' else "ⓜ method"
-
                 row = (
                     item['class'],
                     item['method'],
@@ -111,18 +104,23 @@ class RegistryDashboard(App):
 
             self.notify(f"Loaded {len(registry)} signatures.")
 
+        except json.JSONDecodeError:
+            self.notify("Error: JSON file is corrupted or empty.", severity="error")
+        except KeyError as e:
+            self.notify(f"Error: Missing key in JSON data: {e}", severity="error")
         except Exception as e:
-            self.notify(f"Error parsing JSON: {e}", severity="error")
+            self.notify(f"Unexpected Error: {e}", severity="error")
 
     def on_input_changed(self, event: Input.Changed) -> None:
-        """Live search filter."""
-        query = event.value.lower()
-        table = self.query_one(DataTable)
-        table.clear()
-
-        for row in self.raw_data:
-            if query in row[0].lower() or query in row[1].lower():
-                table.add_row(*row)
+        try:
+            query = event.value.lower()
+            table = self.query_one(DataTable)
+            table.clear()
+            for row in self.raw_data:
+                if query in row[0].lower() or query in row[1].lower():
+                    table.add_row(*row)
+        except Exception:
+            pass # Silent fail for UI flicker
 
     def action_refresh_data(self):
         self.load_data()
@@ -130,14 +128,13 @@ class RegistryDashboard(App):
     def action_focus_search(self):
         self.query_one(Input).focus()
 
-# --- CLEANUP LOGIC ---
 def cleanup_temp_file(path):
-    """Deletes the JSON file when the script exits."""
     if os.path.exists(path):
         try:
             os.remove(path)
-        except OSError:
-            pass
+        except OSError as e:
+            # Print to stderr so it doesn't mess up TUI output
+            print(f"Warning: Could not delete temp file: {e}", file=sys.stderr)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -146,8 +143,20 @@ if __name__ == "__main__":
 
     json_path = sys.argv[1]
 
-    # NEW: Register cleanup function to run when this script dies (even via 'X' button)
+    # Register Cleanup
     atexit.register(cleanup_temp_file, json_path)
 
-    app = RegistryDashboard(json_path)
-    app.run()
+    try:
+        # Run App Protected
+        app = RegistryDashboard(json_path)
+        app.run()
+
+    except Exception as e:
+        # Catch ALL Crashes (Textual errors, Python errors, etc.)
+        # Clear screen so user sees the error
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print("VISUALIZER CRASH", file=sys.stderr)
+        print("--------------------------------------------------", file=sys.stderr)
+        traceback.print_exc()  # Prints the full stack trace
+        print("--------------------------------------------------", file=sys.stderr)
+        sys.exit(1)
