@@ -52,6 +52,6 @@ jobs:
       # It uploads the zip file to the GitHub Releases page.
       - name: Upload to Release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: soft props/action-gh-release@v1
+        uses: softprops/action-gh-release@v1
         with:
           files: JackCompiler-${{ matrix.artifact_name }}.zip
