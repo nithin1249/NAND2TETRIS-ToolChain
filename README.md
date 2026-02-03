@@ -59,6 +59,10 @@ We are working on a backend extension that translates the parsed AST directly in
 ### 1. Download
 Get the `JackCompiler_Release.zip` from the **[Releases Page](https://github.com/nithin1249/NAND2TETRIS-ToolChain/releases)**.
 
+Python Dependencies:
+1. textual>=0.40.0
+2. pywebview>=4.0.0
+
 ### 2. FOLDER CONTENTS of ZIP File:
 - bin/      : Compiler binaries for Windows, macOS, and Linux.
 - os/       : The Jack Standard Library (Math, Array, etc.).
