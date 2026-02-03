@@ -1,4 +1,4 @@
-name: Jack  Compiler
+name: Jack Compiler
 
 on:
   push:
