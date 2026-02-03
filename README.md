@@ -1,3 +1,4 @@
+[![Jack Compiler](https://github.com/nithin1249/NAND2TETRIS-JackCompiler/actions/workflows/build.yml/badge.svg)](https://github.com/nithin1249/NAND2TETRIS-JackCompiler/actions/workflows/build.yml)
 # Nand2Tetris: Jack Compiler 
 
 ![Language](https://img.shields.io/badge/language-C%2B%2B17-blue.svg)
