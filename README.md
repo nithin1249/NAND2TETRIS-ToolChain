@@ -75,9 +75,8 @@ Python Dependencies:
 
 #### Windows
 1. Extract the zip file.
-2. Double-click **`install.bat`**.
-3. Follow the prompt to add the installation folder to your `PATH`.
-
+2. Right-click `install.bat` and select **Run as Administrator**.
+   *(This automatically sets up the global `jack` command for you.)*
 #### macOS / Linux
 1. Extract the zip file.
 2. Open your terminal in the extracted folder.

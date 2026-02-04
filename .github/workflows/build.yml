@@ -98,19 +98,6 @@ jobs:
               echo "❌ Build Failed: Output missing."
               exit 1
           fi
-
-      - name: Visualizer Crash Test (Linux Only)
-        if: runner.os == 'Linux'
-        continue-on-error: true
-        run: |
-          echo "[STEP 5] Testing Visualizers..."
-          sudo apt-get update && sudo apt-get install -y xvfb
-          cd "JackCompiler-${{ matrix.artifact_name }}/JackCode/JackProject"
-          
-          # Run inside fake monitor. Timeout after 5s.
-          timeout 5s xvfb-run -a jack --viz-ast . || true
-          timeout 5s xvfb-run -a jack --viz-checker . || true
-
       # --- NEW STEP: Zip the Folder ---
       # We use CMake's built-in tool to zip the 'dist' folder.
       # This works on Windows, Linux, and Mac without needing external tools.

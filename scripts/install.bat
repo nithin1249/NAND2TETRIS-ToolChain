@@ -14,6 +14,7 @@ if not exist "%INSTALL_DIR%" mkdir "%INSTALL_DIR%"
 if not exist "%INSTALL_DIR%\bin" mkdir "%INSTALL_DIR%\bin"
 if not exist "%INSTALL_DIR%\tools" mkdir "%INSTALL_DIR%\tools"
 if not exist "%INSTALL_DIR%\os" mkdir "%INSTALL_DIR%\os"
+if not exist "%INSTALL_DIR%\JackCode" mkdir "%INSTALL_DIR%\JackCode"
 
 :: 3. Install Executable
 if exist "%SOURCE_DIR%bin\NAND2TETRIS_win.exe" (
@@ -21,8 +22,6 @@ if exist "%SOURCE_DIR%bin\NAND2TETRIS_win.exe" (
     echo [OK] Installed jack.exe
 ) else (
     echo [ERROR] Could not find bin\NAND2TETRIS_win.exe
-    echo         Make sure you unzipped the entire folder.
-    pause
     exit /b 1
 )
 
@@ -31,6 +30,9 @@ xcopy /Y /S /Q "%SOURCE_DIR%tools\*" "%INSTALL_DIR%\tools\" >nul
 if exist "%SOURCE_DIR%os" (
     xcopy /Y /S /Q "%SOURCE_DIR%os\*" "%INSTALL_DIR%\os\" >nul
 )
+if exist "%SOURCE_DIR%JackCode" (
+    xcopy /Y /S /Q "%SOURCE_DIR%JackCode\*" "%INSTALL_DIR%\JackCode\" >nul
+)
 
 :: =========================================================
 ::  PYTHON & DEPENDENCY CHECK
@@ -38,12 +40,10 @@ if exist "%SOURCE_DIR%os" (
 echo.
 echo [SETUP] Checking Python environment...
 
-:: Check if python is in the PATH
 python --version >nul 2>&1
 if %errorlevel% equ 0 (
-    echo    -> Python detected. Installing dependencies...
+    echo    - Python detected. Installing dependencies...
 
-    :: Attempt to install libraries (silently)
     pip install -r "%INSTALL_DIR%\tools\requirements.txt" >nul 2>&1
 
     if !errorlevel! equ 0 (
@@ -55,9 +55,8 @@ if %errorlevel% equ 0 (
     )
 ) else (
     echo    [!] WARNING: Python is NOT installed.
-    echo        The core compiler jack.exe' will work fine.
-    echo        However, the Visualizer tools will NOT work until you install Python.
-    echo        Get it here: https://www.python.org/downloads/
+    echo        The core compiler 'jack.exe' will work fine.
+    echo        The Visualizer tools will NOT work until you install Python.
 )
 
 :: =========================================================
@@ -73,28 +72,33 @@ echo [SETUP] Configuring terminal commands...
 ) > "%SystemRoot%\jack.cmd" 2>nul
 
 if exist "%SystemRoot%\jack.cmd" (
-    echo.
-    echo    [SUCCESS] INSTALLED AS ADMINISTRATOR!
+    echo    [SUCCESS] INSTALLED AS ADMINISTRATOR
     echo    -------------------------------------
-    echo    You can now open ANY terminal window (Cmd, PowerShell, VS Code)
-    echo    and type 'jack' immediately.
+    echo    You can now open ANY terminal window and type 'jack'.
     echo.
-) else (
-    :: STRATEGY 2: The "User-Only" Install (No Admin)
-    echo    [NOTE] Admin rights not detected. Using User Profile method.
-
-    setx PATH "%INSTALL_DIR%\bin;%PATH%" >nul
-
-    echo.
-    echo    [SUCCESS] INSTALLED FOR USER!
-    echo    -----------------------------
-    echo    The 'jack' command has been added to your settings.
-    echo.
-    echo    IMPORTANT: You must CLOSE ALL TERMINAL WINDOWS and open
-    echo               a new one for this change to take effect.
+    goto :FINISH
 )
 
+:: STRATEGY 2: The "User-Only" Install (Fallback)
+echo    [NOTE] Admin rights not detected. Using User Profile method.
+
+setx PATH "%INSTALL_DIR%\bin;%PATH%" >nul
+
+echo    [SUCCESS] INSTALLED FOR USER
+echo    -----------------------------
+echo    The 'jack' command has been added to your settings.
+echo    IMPORTANT: You must CLOSE ALL TERMINAL WINDOWS and open
+echo               a new one for this change to take effect.
+
+:FINISH
+echo.
 echo ==========================================
 echo  Done.
 echo ==========================================
-pause
+
+:: SMART PAUSE:
+:: If running on GitHub Actions, skip pause so the build finishes.
+:: If running on a user's PC, pause so they can read the logs.
+if "%GITHUB_ACTIONS%" == "" (
+    pause
+)

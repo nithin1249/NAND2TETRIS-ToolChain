@@ -51,13 +51,20 @@ chmod +x "$INSTALL_DIR/wrapper.sh"
 
 # --- NEW: Check Python ---
 echo "🐍 Checking for Python (required for --viz tools)..."
-if command -v python3 &> /dev/null; then
+if command -v python3 >/dev/null 2>&1; then
     echo "   -> Python 3 detected."
     echo "   -> Installing dependencies (textual, pywebview)..."
-    # Try to install silently; if fails, print warning
+
+    # Try standard install, then try with 'bypass' flags for macOS/Modern Linux
     if ! pip3 install -r "$INSTALL_DIR/tools/requirements.txt" > /dev/null 2>&1; then
-         echo "   ⚠️  Could not auto-install libraries. Run this later:"
-         echo "       pip3 install -r $INSTALL_DIR/tools/requirements.txt"
+        if ! pip3 install -r "$INSTALL_DIR/tools/requirements.txt" --break-system-packages --user > /dev/null 2>&1; then
+             echo "   ⚠️  Could not auto-install libraries. Run this later:"
+             echo "       pip3 install -r $INSTALL_DIR/tools/requirements.txt"
+        else
+             echo "   ✅ Libraries installed (User-mode)."
+        fi
+    else
+        echo "   ✅ Libraries installed."
     fi
 else
     echo "   ⚠️  WARNING: Python 3 is not installed."

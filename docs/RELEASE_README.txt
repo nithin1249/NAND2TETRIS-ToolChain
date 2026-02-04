@@ -30,8 +30,9 @@ textual>=0.40.0
 pywebview>=4.0.0
 
 Windows:
-1. Double-click "install.bat".
-2. Follow the on-screen instructions to add the compiler to your PATH.
+1. Extract the zip file.
+2. Right-click `install.bat` and select Run as Administrator. (This automatically sets up the global `jack` command for
+you.)
 
 macOS / Linux:
 1. Open Terminal in this folder.
