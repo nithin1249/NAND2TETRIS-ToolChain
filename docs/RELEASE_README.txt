@@ -35,10 +35,9 @@ Windows:
 you.)
 
 macOS / Linux:
-1. Open Terminal in this folder.
-2. Run: chmod +x install.sh
-3. Run: ./install.sh
-   (You will be asked for your password to create the 'jack' command shortcut).
+1. Extract the zip file.
+2. Open your terminal in the extracted folder.
+3. Run the installer: ./install.sh
 
 USAGE
 -----

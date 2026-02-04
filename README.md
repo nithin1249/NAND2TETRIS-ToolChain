@@ -82,7 +82,6 @@ Python Dependencies:
 2. Open your terminal in the extracted folder.
 3. Run the installer:
    ```bash
-   chmod +x install.sh
    ./install.sh
 
 ### 4. USAGE
