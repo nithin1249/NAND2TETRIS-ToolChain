@@ -55,7 +55,7 @@ if %errorlevel% equ 0 (
     )
 ) else (
     echo    [!] WARNING: Python is NOT installed.
-    echo        The core compiler (NAND2TETRIS_win.exe) will work fine.
+    echo        The core compiler jack.exe' will work fine.
     echo        However, the Visualizer tools will NOT work until you install Python.
     echo        Get it here: https://www.python.org/downloads/
 )
