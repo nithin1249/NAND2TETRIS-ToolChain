@@ -1,0 +1,37 @@
+class Student {
+    // Fields: properties of the object
+    field String name;
+    field int age;
+    field int grade; // e.g., 10, 11, 12
+
+    // Constructor: Creates a new Student
+    constructor Student new(String sName, int sAge, int sGrade) {
+        let name = sName;
+        let age = sAge;
+        let grade = sGrade;
+        return this;
+    }
+
+    // Method: Prints the student's details
+    method void print() {
+        do Output.printString("Name: ");
+        do Output.printString(name);
+        do Output.printString(", Age: ");
+        do Output.printInt(age);
+        do Output.printString(", Grade: ");
+        do Output.printInt(grade);
+        do Output.println(); // New line
+        return;
+    }
+
+    // Method: Getter for the name (tests return values)
+    method String getName() {
+        return name;
+    }
+
+    // Method: Clean up memory
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+}
