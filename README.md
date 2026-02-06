@@ -23,6 +23,15 @@ This project goes beyond the standard Nand2Tetris course requirements by impleme
 * **🛠 Visualization Suite:** Built-in tools to visualize the Abstract Syntax Tree (AST) and inspect the Global Symbol Registry in real-time.
 
 ---
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=V3tYG482QCk">
+   <img src="https://img.youtube.com/vi/V3tYG482QCk/maxresdefault.jpg" alt="JackCompiler Demo" width="80%">
+  </a>
+  <br>
+  <em>Click to watch the Jack Compiler Demo</em>
+</p>
+
+---
 
 ## 🏗 Architectural Pipeline
 
@@ -64,7 +73,7 @@ Python Dependencies:
 1. textual>=0.40.0
 2. pywebview>=4.0.0
 
-### 2. FOLDER CONTENTS of ZIP File:
+### 2. Folder Contents of ZIP File:
 - bin/      : Compiler binaries for Windows, macOS, and Linux.
 - os/       : The Jack Standard Library (Math, Array, etc.).
 - tools/    : Visualization scripts (Python + D3.js).
