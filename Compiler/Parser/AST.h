@@ -35,6 +35,7 @@ namespace nand2tetris::jack {
 
         // --- Expressions (Terms) ---
         INTEGER_LITERAL,    ///< IntegerLiteralNode
+        FLOAT_LITERAL,      ///< FloatLiteralNode
         STRING_LITERAL,     ///< StringLiteralNode
         KEYWORD_LITERAL,    ///< KeywordLiteralNode
         BINARY_OP,          ///< BinaryOpNode
@@ -136,7 +137,7 @@ namespace nand2tetris::jack {
 
                 out << sp << "  <keyword> " << (kind == ClassVarKind::STATIC ? "static" : "field") << " </keyword>\n";
 
-                if (type == "int" || type == "char" || type == "boolean") {
+                if (type == "int" || type == "char" || type == "boolean"||type=="float") {
                     out << sp << "  <keyword> " << type << " </keyword>\n";
                 } else {
                     out << sp << "  <identifier> " << type << " </identifier>\n";
@@ -187,7 +188,7 @@ namespace nand2tetris::jack {
 
                 // The type (int, char, boolean, or className)
                 // We treat the type as a keyword if it's a primitive, or an identifier if it's a class.
-                if (type == "int" || type == "char" || type == "boolean") {
+                if (type == "int" || type == "char" || type == "boolean"||type=="float") {
                     out << sp << "  <keyword> " << type << " </keyword>\n";
                 } else {
                     out << sp << "  <identifier> " << type << " </identifier>\n";
@@ -264,7 +265,7 @@ namespace nand2tetris::jack {
      */
     class IntegerLiteralNode final : public ExpressionNode {
         protected:
-            int value; ///< The integer value.
+            int32_t value; ///< The integer value.
             friend class SemanticAnalyser;
             friend class CodeGenerator;
         public:
@@ -274,7 +275,8 @@ namespace nand2tetris::jack {
              * @param l The line number.
              * @param c The column number.
              */
-            explicit IntegerLiteralNode(const int val,const int l, const int c) : ExpressionNode(ASTNodeType::INTEGER_LITERAL,l,c),value(val) {}
+            explicit IntegerLiteralNode(const int32_t val,const int l, const int c)
+                : ExpressionNode (ASTNodeType::INTEGER_LITERAL,l,c),value(val) {}
             ~IntegerLiteralNode() override = default;
             void printXml(std::ostream& out, const int indent) const override {
                 const std::string sp(indent, ' ');
@@ -283,6 +285,39 @@ namespace nand2tetris::jack {
                 out << sp << "</term>\n"; // Add Wrapper
             }
     };
+
+    /**
+     * @brief Represents an float literal expression.
+     *
+     * Example: `42.3`
+     */
+    class FloatLiteralNode final : public ExpressionNode {
+        protected:
+            double value;
+            friend class SemanticAnalyser;
+            friend class CodeGenerator;
+        public:
+            /**
+             * @brief Constructs an FloatLiteralNode.
+             * @param val The integer value.
+             * @param l The line number.
+             * @param c The column number.
+             */
+            explicit FloatLiteralNode(const double val, const int l, const int c)
+                :ExpressionNode (ASTNodeType::FLOAT_LITERAL,l,c),value(val) {}
+
+            ~FloatLiteralNode() override = default;
+
+            void printXml(std::ostream& out, const int indent) const override {
+                const std::string sp(indent, ' ');
+                out << sp << "<term>\n";  // Add Wrapper
+                out << sp << "  <FloatConstant> " << value << " </FloatConstant>\n";
+                out << sp << "</term>\n"; // Add Wrapper
+            }
+            double getFloat() const{return value;}
+    };
+
+
 
     /**
      * @brief Represents a string literal expression.
@@ -783,7 +818,8 @@ namespace nand2tetris::jack {
                 const std::string typeStr = (subType == SubroutineType::CONSTRUCTOR ? "constructor" :
                                       (subType == SubroutineType::FUNCTION ? "function" : "method"));
                 out << sp << "  <keyword> " << typeStr << " </keyword>\n";
-                if (returnType == "int" || returnType == "void" || returnType == "boolean" || returnType == "char") {
+                if (returnType == "int" || returnType == "void" || returnType == "boolean" || returnType ==
+                    "char"||returnType=="float") {
                     out << sp << "  <keyword> " << returnType << " </keyword>\n";
                 } else {
                     out << sp << "  <identifier> " << returnType << " </identifier>\n";

@@ -141,7 +141,7 @@ namespace nand2tetris::jack {
 
         // 2. Parse the type (int, char, boolean, or a class name).
         std::string_view type = currentToken->getValue();
-        if (check("int")||check("boolean")||check("char")||check(TokenType::IDENTIFIER)) {
+        if (check("int")||check("boolean")||check("char")||check("float")||check(TokenType::IDENTIFIER)) {
             advance();
         }else {
             tokenizer.errorAt(currentToken->getLine(), currentToken->getColumn(), "Expected variable type (int, char, boolean, or class name)");
@@ -202,7 +202,7 @@ namespace nand2tetris::jack {
         if (currentToken->getValue()=="void") {
             returnType="void";
             advance();
-        }else if (check("int")||check("boolean")||check("char")||check(TokenType::IDENTIFIER)) {
+        }else if (check("int")||check("float")||check("boolean")||check("char")||check(TokenType::IDENTIFIER)) {
             returnType=currentToken->getValue();
             advance();
         }else {
@@ -301,7 +301,7 @@ namespace nand2tetris::jack {
 
         // 2. Parse the type (int, char, boolean, or a class name).
         std::string_view type = currentToken->getValue();
-        if (check("int")||check("boolean")||check("char")||check(TokenType::IDENTIFIER)) {
+        if (check("int")||check("boolean")||check("char")||check("float")||check(TokenType::IDENTIFIER)) {
             advance();
         }else {
             tokenizer.errorAt(currentToken->getLine(), currentToken->getColumn(), "Expected variable type (int, char, boolean, or class name)");
@@ -502,7 +502,6 @@ namespace nand2tetris::jack {
         std::unique_ptr<CallNode> call = parseSubroutineCall();
         consume(";", "Expected ';' after do subroutine call");
         return std::make_unique<DoStatementNode>(std::move(call), line, col);
-
     }
 
     std::unique_ptr<ExpressionNode> Parser::parseExpression() {
@@ -550,9 +549,16 @@ namespace nand2tetris::jack {
         // 1. Integer Constant
         if (check(TokenType::INT_CONST)) {
             const auto* intToken = static_cast<const IntToken*>(currentToken);// NOLINT(*-pro-type-static-cast-downcast)
-            int val = intToken->getInt();
+            int32_t val = intToken->getInt();
             advance();
             return std::make_unique<IntegerLiteralNode>(val, line, col);
+        }
+
+        if (check(TokenType::FLOAT_CONST)) {
+            const auto* floatToken = static_cast<const FloatToken*>(currentToken);// NOLINT(*-pro-type-static-cast-downcast)
+            double val = floatToken->getFloat();
+            advance();
+            return std::make_unique<FloatLiteralNode>(val, line, col);
         }
 
         // 2. String Constant
